@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Home Decor - Luxury Furniture & Home Accessories{% endblock %}</title>
+    <meta name="description" content="Discover elegant furniture and home decor at Home Decor. Shop sofas, beds, dining tables, wall art, and more.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stripe JS -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('index') }}" class="navbar-brand">
+                <span>🏠</span> Home Decor
+            </a>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <ul class="navbar-links">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="dropdown">
+                        <a href="#">Categories ▾</a>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('products', category_type='furniture') }}">Furniture</a>
+                            <a href="{{ url_for('products', category_type='home_decor') }}">Home Decor</a>
+                            <div style="border-top: 1px solid #eee; margin: 4px 0;"></div>
+                            <a href="{{ url_for('products', category='all') }}">All Products</a>
+                        </div>
+                    </li>
+                    <li><a href="{{ url_for('products') }}">Shop</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                
+                <div class="navbar-actions">
+                    <form action="{{ url_for('products') }}" method="get" class="search-box" style="display: none;" id="navbarSearch">
+                        <input type="text" name="search" placeholder="Search products...">
+                        <button type="submit">🔍</button>
+                    </form>
+                    <button class="navbar-action-btn" onclick="toggleSearch()" title="Search">🔍</button>
+                    
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('wishlist') }}" class="navbar-action-btn" title="Wishlist">🤍</a>
+                        <a href="{{ url_for('orders') }}" class="navbar-action-btn" title="Orders">📦</a>
+                        {% if current_user.is_admin %}
+                            <a href="{{ url_for('admin_dashboard') }}" class="navbar-action-btn" title="Admin Dashboard">⚙️</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline" style="padding: 6px 12px;">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline" style="padding: 6px 12px;">Login</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary" style="padding: 6px 12px;">Sign Up</a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('cart') }}" class="navbar-action-btn" title="Cart">
+                        🛒
+                        {% if cart_count > 0 %}
+                            <span class="badge">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            
+            <button class="navbar-action-btn" onclick="toggleMobileMenu()" style="display: none;" id="mobileMenuBtn">☰</button>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container" style="margin-top: 20px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>About Home Decor</h3>
+                    <p style="color: rgba(255,255,255,0.7);">Discover elegant furniture and home decor to transform your living space into a sanctuary of style and comfort.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="{{ url_for('products') }}">All Products</a></li>
+                        <li><a href="{{ url_for('products', category_type='furniture') }}">Furniture</a></li>
+                        <li><a href="{{ url_for('products', category_type='home_decor') }}">Home Decor</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Customer Service</h3>
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns & Exchanges</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect With Us</h3>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Pinterest</a></li>
+                        <li><a href="#">Twitter</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Home Decor. All rights reserved. | Designed with ❤️</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <script>
+        function toggleSearch() {
+            const searchBox = document.getElementById('navbarSearch');
+            searchBox.style.display = searchBox.style.display === 'none' ? 'flex' : 'none';
+        }
+        
+        function toggleMobileMenu() {
+            const menu = document.getElementById('navbarMenu');
+            menu.classList.toggle('active');
+        }
+        
+        // Mobile menu button
+        if (window.innerWidth <= 992) {
+            document.getElementById('mobileMenuBtn').style.display = 'block';
+        }
+        
+        window.addEventListener('resize', function() {
+            const btn = document.getElementById('mobileMenuBtn');
+            if (window.innerWidth <= 992) {
+                btn.style.display = 'block';
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
