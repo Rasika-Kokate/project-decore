@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Failed - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <div class="success-container">
+            <div class="success-icon" style="background-color: #dc3545;">✕</div>
+            <h1>Payment Failed</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 10px;">Unfortunately, your payment could not be processed.</p>
+            <p style="color: var(--color-gray); margin-bottom: 30px;">{{ error_message or 'Please try again or use a different payment method.' }}</p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{{ url_for('checkout') }}" class="btn btn-primary">Try Again</a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline">Continue Shopping</a>
+            </div>
+            
+            <div style="margin-top: 40px; padding: 20px; background: var(--color-beige); border-radius: 8px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <h4>Test Card Details</h4>
+                <p style="font-size: 0.9rem; margin-top: 10px;">
+                    <strong>Card Number:</strong> 4242424242424242<br>
+                    <strong>Expiry:</strong> Any future date (e.g., 12/25)<br>
+                    <strong>CVC:</strong> Any 3 digits (e.g., 123)
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

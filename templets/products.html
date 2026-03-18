@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Shop - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <div class="section-title">
+            <h2>{% if category_name %}{{ category_name }}{% else %}All Products{% endif %}</h2>
+            <p>Browse our complete collection</p>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filter-section">
+            <form action="{{ url_for('products') }}" method="get">
+                <div class="filter-container">
+                    <div class="filter-group">
+                        <label>Category:</label>
+                        <select name="category" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.name }}" {% if selected_category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                        
+                        <label>Sort by:</label>
+                        <select name="sort" onchange="this.form.submit()">
+                            <option value="created_at" {% if sort == 'created_at' %}selected{% endif %}>Newest</option>
+                            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-box">
+                        <input type="text" name="search" placeholder="Search products..." value="{{ search_query or '' }}">
+                        <button type="submit">🔍</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Products Grid -->
+        <div class="products-grid">
+            {% for product in products.items %}
+            <div class="product-card">
+                <div class="product-card-image">
+                    <img src="{{ product.image_url or 'https://via.placeholder.com/300x300/F5F5DC/5D432C?text=' + product.name|urlencode }}" alt="{{ product.name }}">
+                    {% if product.is_featured %}
+                    <span class="product-card-badge">Featured</span>
+                    {% endif %}
+                    <div class="product-card-actions">
+                        <button class="product-card-action" onclick="addToWishlist({{ product.id }})" title="Add to Wishlist">🤍</button>
+                        <button class="product-card-action" onclick="quickAddToCart({{ product.id }})" title="Add to Cart">🛒</button>
+                    </div>
+                </div>
+                <div class="product-card-content">
+                    <span class="product-card-category">{{ product.category_name }}</span>
+                    <h3><a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a></h3>
+                    <div class="product-card-price">${{ "%.2f"|format(product.price) }}</div>
+                    <div class="product-card-stock">{{ product.stock }} in stock</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if products.pages > 1 %}
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if products.has_prev %}
+            <a href="{{ url_for('products', page=products.prev_num, category=selected_category, sort=sort, search=search_query) }}">&laquo; Previous</a>
+            {% endif %}
+            
+            {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == products.page %}
+                    <span class="active">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('products', page=page_num, category=selected_category, sort=sort, search=search_query) }}">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if products.has_next %}
+            <a href="{{ url_for('products', page=products.next_num, category=selected_category, sort=sort, search=search_query) }}">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if not products.items %}
+        <div class="text-center" style="padding: 60px;">
+            <h3>No products found</h3>
+            <p>Try adjusting your search or filter criteria</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary mt-3">View All Products</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToWishlist(productId) {
+    fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || 'Added to wishlist!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to wishlist');
+    });
+}
+
+function quickAddToCart(productId) {
+    fetch('/api/cart', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Added to cart!');
+        window.location.href = '/cart';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to cart');
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <h1 style="margin-bottom: 30px;">My Orders</h1>
+        
+        {% if orders %}
+        <div style="display: grid; gap: 20px;">
+            {% for order in orders %}
+            <div class="admin-card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                    <div>
+                        <h3 style="margin-bottom: 5px;">Order #{{ order.order_number }}</h3>
+                        <p style="color: var(--color-gray); font-size: 0.9rem;">
+                            {{ order.created_at.strftime('%B %d, %Y') if order.created_at else 'N/A' }}
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-walnut);">
+                            ${{ "%.2f"|format(order.total_amount) }}
+                        </div>
+                        <span style="padding: 4px 12px; border-radius: 4px; font-size: 0.8rem; 
+                            {% if order.payment_status == 'succeeded' %}background: #d4edda; color: #155724;
+                            {% elif order.payment_status == 'failed' %}background: #f8d7da; color: #721c24;
+                            {% else %}background: #fff3cd; color: #856404;{% endif %}">
+                            {{ order.payment_status }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid var(--color-gray-light); padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px;">Items:</h4>
+                    <div style="display: grid; gap: 10px;">
+                        {% for item in order.items %}
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <img src="{{ item.product_image or 'https://via.placeholder.com/60x60/F5F5DC/5D432C?text=P' }}" 
+                                 alt="{{ item.product_name }}" 
+                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500;">{{ item.product_name }}</div>
+                                <div style="color: var(--color-gray); font-size: 0.9rem;">Qty: {{ item.quantity }}</div>
+                            </div>
+                            <div style="font-weight: 600;">${{ "%.2f"|format(item.price * item.quantity) }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {% if order.shipping_address %}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--color-gray-light);">
+                    <strong>Shipping Address:</strong>
+                    <p style="color: var(--color-gray); margin-top: 5px;">
+                        {{ order.shipping_name }}<br>
+                        {{ order.shipping_address }}<br>
+                        {{ order.shipping_city }}, {{ order.shipping_state }} {{ order.shipping_zip }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 60px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">📦</div>
+            <h2>No orders yet</h2>
+            <p>You haven't placed any orders yet.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary mt-3">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

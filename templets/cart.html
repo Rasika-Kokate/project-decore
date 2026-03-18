@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <h1 style="margin-bottom: 30px;">Shopping Cart</h1>
+        
+        {% if cart_items %}
+        <div class="cart-container">
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="{{ item.product.image_url or 'https://via.placeholder.com/100x100/F5F5DC/5D432C?text=Product' }}" alt="{{ item.product.name }}">
+                    </div>
+                    <div class="cart-item-details">
+                        <h3><a href="{{ url_for('product_detail', product_id=item.product.id) }}">{{ item.product.name }}</a></h3>
+                        <div class="product-card-price">${{ "%.2f"|format(item.product.price) }}</div>
+                        <div class="cart-item-quantity">
+                            <button onclick="updateQuantity({{ item.id }}, {{ item.quantity - 1 }})">-</button>
+                            <span>{{ item.quantity }}</span>
+                            <button onclick="updateQuantity({{ item.id }}, {{ item.quantity + 1 }})">+</button>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">${{ "%.2f"|format(item.product.price * item.quantity) }}</div>
+                        <button onclick="removeItem({{ item.id }})" style="color: #dc3545; background: none; border: none; cursor: pointer;">Remove</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="cart-summary">
+                <h3>Order Summary</h3>
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <span>${{ "%.2f"|format(total_price) }}</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Shipping</span>
+                    <span>{% if total_price > 500 %}Free{% else %}$49.99{% endif %}</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Tax</span>
+                    <span>${{ "%.2f"|format(total_price * 0.08) }}</span>
+                </div>
+                <div class="cart-summary-row cart-summary-total">
+                    <span>Total</span>
+                    <span>${{ "%.2f"|format(total_price + (0 if total_price > 500 else 49.99) + (total_price * 0.08)) }}</span>
+                </div>
+                
+                <a href="{{ url_for('checkout') }}" class="btn btn-primary" style="width: 100%; margin-top: 20px; padding: 16px;">
+                    Proceed to Checkout
+                </a>
+                
+                <button onclick="clearCart()" class="btn btn-outline" style="width: 100%; margin-top: 10px;">
+                    Clear Cart
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 60px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🛒</div>
+            <h2>Your cart is empty</h2>
+            <p>Looks like you haven't added anything to your cart yet.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary mt-3">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateQuantity(cartItemId, quantity) {
+    if (quantity < 1) return;
+    
+    fetch('/api/cart/' + cartItemId, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ quantity: quantity })
+    })
+    .then(response => response.json())
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update quantity');
+    });
+}
+
+function removeItem(cartItemId) {
+    if (!confirm('Remove this item from cart?')) return;
+    
+    fetch('/api/cart/' + cartItemId, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to remove item');
+    });
+}
+
+function clearCart() {
+    if (!confirm('Clear all items from cart?')) return;
+    
+    fetch('/api/cart', {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to clear cart');
+    });
+}
+</script>
+{% endblock %}

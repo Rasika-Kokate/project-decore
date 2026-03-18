@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
+            <!-- Product Image -->
+            <div style="background: var(--color-beige); border-radius: 8px; overflow: hidden;">
+                <img src="{{ product.image_url or 'https://via.placeholder.com/600x600/F5F5DC/5D432C?text=' + product.name|urlencode }}" 
+                     alt="{{ product.name }}" 
+                     style="width: 100%; height: auto;">
+            </div>
+            
+            <!-- Product Details -->
+            <div>
+                <nav aria-label="breadcrumb" style="margin-bottom: 16px;">
+                    <a href="{{ url_for('index') }}">Home</a> / 
+                    <a href="{{ url_for('products', category=product.category_name) }}">{{ product.category_name }}</a> / 
+                    {{ product.name }}
+                </nav>
+                
+                <h1 style="font-size: 2rem; margin-bottom: 8px;">{{ product.name }}</h1>
+                <p style="color: var(--color-gray); margin-bottom: 16px;">{{ product.category_name }}</p>
+                
+                <div style="font-size: 2rem; font-weight: 700; color: var(--color-walnut); margin-bottom: 16px;">
+                    ${{ "%.2f"|format(product.price) }}
+                </div>
+                
+                <p style="margin-bottom: 24px;">{{ product.description }}</p>
+                
+                <div style="margin-bottom: 24px;">
+                    <strong>Availability:</strong> 
+                    <span style="color: {% if product.stock > 0 %}#28a745{% else %}#dc3545{% endif %};">
+                        {% if product.stock > 0 %}{{ product.stock }} in stock{% else %}Out of stock{% endif %}
+                    </span>
+                </div>
+                
+                {% if product.stock > 0 %}
+                <form id="addToCartForm" style="margin-bottom: 24px;">
+                    <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px;">
+                        <label><strong>Quantity:</strong></label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" onclick="decreaseQty()" style="width: 32px; height: 32px; border: 1px solid var(--color-gray); background: white; cursor: pointer;">-</button>
+                            <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock }}" 
+                                   style="width: 60px; padding: 8px; text-align: center; border: 1px solid var(--color-gray-light);">
+                            <button type="button" onclick="increaseQty()" style="width: 32px; height: 32px; border: 1px solid var(--color-gray); background: white; cursor: pointer;">+</button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px;">
+                        🛒 Add to Cart
+                    </button>
+                </form>
+                
+                <button onclick="addToWishlist({{ product.id }})" class="btn btn-outline" style="width: 100%;">
+                    🤍 Add to Wishlist
+                </button>
+                {% else %}
+                <button class="btn btn-outline" disabled style="width: 100%; opacity: 0.5;">
+                    Out of Stock
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        <div class="section-title">
+            <h3>Related Products</h3>
+        </div>
+        
+        <div class="products-grid">
+            {% for related in related_products %}
+            <div class="product-card">
+                <div class="product-card-image">
+                    <img src="{{ related.image_url or 'https://via.placeholder.com/300x300/F5F5DC/5D432C?text=' + related.name|urlencode }}" alt="{{ related.name }}">
+                    <div class="product-card-actions">
+                        <button class="product-card-action" onclick="addToWishlist({{ related.id }})">🤍</button>
+                        <button class="product-card-action" onclick="quickAddToCart({{ related.id }})">🛒</button>
+                    </div>
+                </div>
+                <div class="product-card-content">
+                    <span class="product-card-category">{{ related.category_name }}</span>
+                    <h3><a href="{{ url_for('product_detail', product_id=related.id) }}">{{ related.name }}</a></h3>
+                    <div class="product-card-price">${{ "%.2f"|format(related.price) }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let quantity = 1;
+const maxQuantity = {{ product.stock }};
+
+function decreaseQty() {
+    if (quantity > 1) {
+        quantity--;
+        document.getElementById('quantity').value = quantity;
+    }
+}
+
+function increaseQty() {
+    if (quantity < maxQuantity) {
+        quantity++;
+        document.getElementById('quantity').value = quantity;
+    }
+}
+
+document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const qty = document.getElementById('quantity').value;
+    
+    fetch('/api/cart', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: {{ product.id }}, quantity: parseInt(qty) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Added to cart!');
+        window.location.href = '/cart';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to cart');
+    });
+});
+
+function addToWishlist(productId) {
+    fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || 'Added to wishlist!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to wishlist');
+    });
+}
+
+function quickAddToCart(productId) {
+    fetch('/api/cart', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Added to cart!');
+        window.location.href = '/cart';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to cart');
+    });
+}
+</script>
+{% endblock %}

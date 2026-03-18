@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <h1 style="margin-bottom: 30px;">Checkout</h1>
+        
+        {% if cart_items %}
+        <div class="cart-container">
+            <div class="checkout-form">
+                <h3 style="margin-bottom: 20px;">Shipping Information</h3>
+                <form id="checkoutForm">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required value="{{ current_user.name if current_user.is_authenticated else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required value="{{ current_user.email if current_user.is_authenticated else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <textarea id="address" name="address" rows="2" required></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="city">City *</label>
+                            <input type="text" id="city" name="city" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="state">State *</label>
+                            <input type="text" id="state" name="state" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="zip">ZIP Code *</label>
+                            <input type="text" id="zip" name="zip" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="country">Country *</label>
+                            <select id="country" name="country" required>
+                                <option value="">Select Country</option>
+                                <option value="US" selected>United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="UK">United Kingdom</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 30px 0 20px;">Payment Information</h3>
+                    
+                    <div class="form-group">
+                        <label>Card Number *</label>
+                        <div id="card-element">
+                            <!-- Stripe Card Element will be inserted here -->
+                        </div>
+                        <div id="card-errors" role="alert"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%; padding: 16px; margin-top: 20px;">
+                        <span id="btnText">Pay ${{ "%.2f"|format(final_total) }}</span>
+                        <span id="btnSpinner" class="spinner hidden"></span>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="cart-summary">
+                <h3>Order Summary</h3>
+                {% for item in cart_items %}
+                <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-gray-light);">
+                    <img src="{{ item.product.image_url or 'https://via.placeholder.com/60x60/F5F5DC/5D432C?text=P' }}" 
+                         alt="{{ item.product.name }}" 
+                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500;">{{ item.product.name }}</div>
+                        <div style="color: var(--color-gray); font-size: 0.9rem;">Qty: {{ item.quantity }}</div>
+                    </div>
+                    <div style="font-weight: 600;">${{ "%.2f"|format(item.product.price * item.quantity) }}</div>
+                </div>
+                {% endfor %}
+                
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <span>${{ "%.2f"|format(total_price) }}</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Shipping</span>
+                    <span>{% if total_price > 500 %}Free{% else %}$49.99{% endif %}</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Tax</span>
+                    <span>${{ "%.2f"|format(total_price * 0.08) }}</span>
+                </div>
+                <div class="cart-summary-row cart-summary-total">
+                    <span>Total</span>
+                    <span>${{ "%.2f"|format(final_total) }}</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 60px;">
+            <h2>Your cart is empty</h2>
+            <p>Add some products to your cart before checking out.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary mt-3">Shop Now</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize Stripe
+const stripe = Stripe('{{ stripe_publishable_key }}');
+const elements = stripe.elements();
+
+// Create and mount the card element
+const cardStyle = {
+    base: {
+        color: '#32325d',
+        fontFamily: '"Lato", sans-serif',
+        fontSmoothing: 'antialiased',
+        fontSize: '16px',
+        '::placeholder': {
+            color: '#aab7c4'
+        }
+    },
+    invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a'
+    }
+};
+
+const card = elements.create('card', { style: cardStyle });
+card.mount('#card-element');
+
+// Handle validation errors
+card.addEventListener('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+        displayError.textContent = event.error.message;
+    } else {
+        displayError.textContent = '';
+    }
+});
+
+// Handle form submission
+document.getElementById('checkoutForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    
+    // Disable button
+    submitBtn.disabled = true;
+    btnText.textContent = 'Processing...';
+    btnSpinner.classList.remove('hidden');
+    
+    // Get shipping info
+    const shipping = {
+        name: document.getElementById('name').value,
+        address: document.getElementById('address').value,
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
+        zip: document.getElementById('zip').value,
+        country: document.getElementById('country').value,
+        phone: document.getElementById('phone').value
+    };
+    
+    try {
+        // Create payment intent
+        const response = await fetch('/api/payment/create-intent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ shipping: shipping })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        // Confirm payment with Stripe
+        const { paymentIntent, error } = await stripe.confirmCardPayment(data.client_secret, {
+            payment_method: {
+                card: card,
+                billing_details: {
+                    name: shipping.name,
+                    email: document.getElementById('email').value,
+                    phone: shipping.phone,
+                    address: {
+                        line1: shipping.address,
+                        city: shipping.city,
+                        state: shipping.state,
+                        postal_code: shipping.zip,
+                        country: shipping.country
+                    }
+                }
+            }
+        });
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        if (paymentIntent.status === 'succeeded') {
+            // Confirm with backend
+            const confirmResponse = await fetch('/api/payment/confirm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    order_id: data.order_id,
+                    payment_intent_id: paymentIntent.id
+                })
+            });
+            
+            const confirmData = await confirmResponse.json();
+            
+            if (confirmData.error) {
+                throw new Error(confirmData.error);
+            }
+            
+            // Redirect to success page
+            window.location.href = '/success?order_id=' + data.order_id;
+        }
+        
+    } catch (error) {
+        alert('Payment failed: ' + error.message);
+        submitBtn.disabled = false;
+        btnText.textContent = 'Pay ${{ "%.2f"|format(final_total) }}';
+        btnSpinner.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

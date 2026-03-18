@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <h1 style="margin-bottom: 30px;">My Wishlist</h1>
+        
+        {% if wishlist_items %}
+        <div class="products-grid">
+            {% for item in wishlist_items %}
+            <div class="product-card">
+                <div class="product-card-image">
+                    <img src="{{ item.product.image_url or 'https://via.placeholder.com/300x300/F5F5DC/5D432C?text=' + item.product.name|urlencode }}" alt="{{ item.product.name }}">
+                    <div class="product-card-actions">
+                        <button class="product-card-action" onclick="removeFromWishlist({{ item.id }})" title="Remove from Wishlist">✕</button>
+                        <button class="product-card-action" onclick="addToCart({{ item.product.id }})" title="Add to Cart">🛒</button>
+                    </div>
+                </div>
+                <div class="product-card-content">
+                    <span class="product-card-category">{{ item.product.category_name }}</span>
+                    <h3><a href="{{ url_for('product_detail', product_id=item.product.id) }}">{{ item.product.name }}</a></h3>
+                    <div class="product-card-price">${{ "%.2f"|format(item.product.price) }}</div>
+                    <div class="product-card-stock">{{ item.product.stock }} in stock</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 60px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🤍</div>
+            <h2>Your wishlist is empty</h2>
+            <p>Save items you love to your wishlist.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary mt-3">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function removeFromWishlist(wishlistItemId) {
+    fetch('/api/wishlist/' + wishlistItemId, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to remove from wishlist');
+    });
+}
+
+function addToCart(productId) {
+    fetch('/api/cart', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Added to cart!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to cart');
+    });
+}
+</script>
+{% endblock %}

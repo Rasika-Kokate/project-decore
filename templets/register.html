@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="auth-container">
+        <h2>Create Account</h2>
+        <p style="text-align: center; margin-bottom: 20px; color: var(--color-gray);">Join us and start shopping</p>
+        
+        <form class="auth-form" method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="8">
+                <small style="color: var(--color-gray);">At least 8 characters with letters and numbers</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Create Account</button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

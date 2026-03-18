@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Home Decor - Luxury Furniture & Home Accessories{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Elevate Your Living Space</h1>
+        <p>Discover exquisite furniture and home decor pieces that transform your house into a home. Crafted with elegance, designed for comfort.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('products') }}" class="btn btn-primary">Shop Now</a>
+            <a href="{{ url_for('products', category_type='furniture') }}" class="btn btn-secondary">Explore Furniture</a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Categories -->
+<section class="section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Shop by Category</h2>
+            <p>Find exactly what you're looking for in our curated collection</p>
+        </div>
+        
+        <div class="categories-grid">
+            <!-- Furniture Categories -->
+            <a href="{{ url_for('products', category='Sofas') }}" class="category-card">
+                <div class="category-card-image">🛋️</div>
+                <div class="category-card-content">
+                    <h3>Sofas</h3>
+                    <p>Comfortable & stylish sofas</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('products', category='Beds') }}" class="category-card">
+                <div class="category-card-image">🛏️</div>
+                <div class="category-card-content">
+                    <h3>Beds</h3>
+                    <p>Modern and classic beds</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('products', category='Dining Tables') }}" class="category-card">
+                <div class="category-card-image">🍽️</div>
+                <div class="category-card-content">
+                    <h3>Dining Tables</h3>
+                    <p>Elegant dining tables</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('products', category='Coffee Tables') }}" class="category-card">
+                <div class="category-card-image">☕</div>
+                <div class="category-card-content">
+                    <h3>Coffee Tables</h3>
+                    <p>Contemporary coffee tables</p>
+                </div>
+            </a>
+            
+            <!-- Home Decor Categories -->
+            <a href="{{ url_for('products', category='Wall Art') }}" class="category-card">
+                <div class="category-card-image">🖼️</div>
+                <div class="category-card-content">
+                    <h3>Wall Art</h3>
+                    <p>Beautiful wall art pieces</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('products', category='Lighting') }}" class="category-card">
+                <div class="category-card-image">💡</div>
+                <div class="category-card-content">
+                    <h3>Lighting</h3>
+                    <p>Ambient lighting solutions</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('products', category='Mirrors') }}" class="category-card">
+                <div class="category-card-image">🪞</div>
+                <div class="category-card-content">
+                    <h3>Mirrors</h3>
+                    <p>Stylish mirrors</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('products', category='Rugs') }}" class="category-card">
+                <div class="category-card-image">🏵️</div>
+                <div class="category-card-content">
+                    <h3>Rugs</h3>
+                    <p>Luxurious area rugs</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="section products-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Featured Products</h2>
+            <p>Handpicked pieces that define modern living</p>
+        </div>
+        
+        <div class="products-grid">
+            {% for product in featured_products %}
+            <div class="product-card">
+                <div class="product-card-image">
+                    <img src="{{ product.image_url or 'https://via.placeholder.com/300x300/F5F5DC/5D432C?text=' + product.name|urlencode }}" alt="{{ product.name }}">
+                    {% if product.is_featured %}
+                    <span class="product-card-badge">Featured</span>
+                    {% endif %}
+                    <div class="product-card-actions">
+                        <button class="product-card-action" onclick="addToWishlist({{ product.id }})" title="Add to Wishlist">🤍</button>
+                        <button class="product-card-action" onclick="quickAddToCart({{ product.id }})" title="Add to Cart">🛒</button>
+                    </div>
+                </div>
+                <div class="product-card-content">
+                    <span class="product-card-category">{{ product.category_name }}</span>
+                    <h3><a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a></h3>
+                    <div class="product-card-price">${{ "%.2f"|format(product.price) }}</div>
+                    <div class="product-card-stock">{{ product.stock }} in stock</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('products') }}" class="btn btn-outline">View All Products</a>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section" id="about">
+    <div class="container">
+        <div class="section-title">
+            <h2>Why Choose Home Decor?</h2>
+            <p>We believe in creating spaces that reflect your unique style</p>
+        </div>
+        
+        <div class="categories-grid">
+            <div class="category-card">
+                <div class="category-card-image" style="font-size: 3rem;">🎨</div>
+                <div class="category-card-content">
+                    <h3>Curated Design</h3>
+                    <p>Each piece is carefully selected by our design experts</p>
+                </div>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-card-image" style="font-size: 3rem;">🚚</div>
+                <div class="category-card-content">
+                    <h3>Free Shipping</h3>
+                    <p>On orders over $500 within the continental US</p>
+                </div>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-card-image" style="font-size: 3rem;">🛡️</div>
+                <div class="category-card-content">
+                    <h3>Quality Guarantee</h3>
+                    <p>All products come with a minimum 1-year warranty</p>
+                </div>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-card-image" style="font-size: 3rem;">💬</div>
+                <div class="category-card-content">
+                    <h3>24/7 Support</h3>
+                    <p>Our customer service team is always here to help</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="section" style="background-color: var(--color-beige);">
+    <div class="container text-center">
+        <h2>Stay Updated</h2>
+        <p style="margin-bottom: 20px;">Subscribe to our newsletter for exclusive deals and design inspiration</p>
+        <form action="#" method="post" style="max-width: 400px; margin: 0 auto; display: flex; gap: 10px;">
+            <input type="email" placeholder="Enter your email" required style="flex: 1; padding: 12px; border: 1px solid var(--color-gray-light); border-radius: 4px;">
+            <button type="submit" class="btn btn-primary">Subscribe</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToWishlist(productId) {
+    fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || 'Added to wishlist!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to wishlist');
+    });
+}
+
+function quickAddToCart(productId) {
+    fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Added to cart!');
+        window.location.href = '/cart';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to add to cart');
+    });
+}
+</script>
+{% endblock %}

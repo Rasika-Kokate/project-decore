@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmed - Home Decor{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="container">
+        <div class="success-container">
+            <div class="success-icon">✓</div>
+            <h1>Thank You!</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 10px;">Your order has been placed successfully.</p>
+            <p style="color: var(--color-gray); margin-bottom: 30px;">Order Number: <strong>{{ order.order_number }}</strong></p>
+            
+            <div style="background: var(--color-white); padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto 30px; box-shadow: var(--shadow-sm);">
+                <h3 style="margin-bottom: 20px;">Order Details</h3>
+                <div style="display: grid; gap: 15px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Order Number:</span>
+                        <strong>{{ order.order_number }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Total Amount:</span>
+                        <strong>${{ "%.2f"|format(order.total_amount) }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Payment Status:</span>
+                        <span style="color: #28a745;">{{ order.payment_status }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Order Status:</span>
+                        <span>{{ order.order_status }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="color: var(--color-gray); margin-bottom: 30px;">
+                A confirmation email has been sent to your email address.<br>
+                You can track your order in your account.
+            </p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{{ url_for('orders') }}" class="btn btn-primary">View Orders</a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
